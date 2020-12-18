@@ -5,7 +5,7 @@ import tensorflow as tf
 class Residual(snt.Module):
     def __init__(self, fn):
         super().__init__()
-        self.fn 
+        self.fn = fn
         
     def __call__(self, x):
         return self.fn(x) + x
@@ -13,7 +13,7 @@ class Residual(snt.Module):
 class PreNorm(snt.Module):
     def __init__(self, dim, fn):
         super().__init__()
-        self.norm = snt.LayerNorm(dim)
+        self.norm = snt.LayerNorm(dim, create_scale=False, create_offset=False)
         self.fn = fn
         
     def __call__(self, x):
@@ -21,15 +21,14 @@ class PreNorm(snt.Module):
         
 class MLP(snt.Module):
     def __init__(self, dim, h_dim, dropout=0.1):
+        super().__init__()
         self.l1 = snt.Linear(h_dim)
-        self.l2 = tf.nn.gelu()
         self.l3 = snt.Dropout(dropout)
         self.l4 = snt.Linear(dim)
         self.l5 = snt.Dropout(dropout)
         
     def __call__(self, x):
-        x = self.l1(x)
-        x = self.l2(x)
+        x = tf.nn.gelu(self.l1(x))
         x = self.l3(x)
         x = self.l4(x)
         out = self.l5(x)
@@ -53,7 +52,7 @@ class MultiHeadAttention(snt.Module):
 
     def scaled_dot_product_attn(self, Q, K, V):
         Q = Q / np.sqrt(self.dim)    
-        scores = tf.matmal(Q, K.transpose())
+        scores = tf.matmul(Q, tf.transpose(K))
         A = tf.nn.softmax(scores)
         H = tf.matmul(A, V)
         
@@ -68,29 +67,40 @@ class MultiHeadAttention(snt.Module):
         
         return self.W_h(H_cat)
         
-class Transformer(snt.Module):
-    def __init__(self, dim, depth, n_heads, mlp_dim, dropout):
+class EncoderBlock(snt.Module):
+    def __init__(self, dim, n_heads, conv_hidden, dropout=0.1):
+        super().__init__()
+        self.dim = dim
+        self.n_heads = n_heads
+        self.dropout = dropout
+        
+        self.l1 = MultiHeadAttention(dim, n_heads=n_heads, dropout=dropout)
+        self.l2 = snt.LayerNorm(dim, create_scale=False, create_offset=False)
+        self.l3 = snt.LayerNorm(dim, create_scale=False, create_offset=False)
+        
+    def __call__(self, x):
+        attn_op = self.l1(x)        
+        out1 = self.l2(attn_op)
+        out2 = self.l3(out1)
+        
+        return out2
+
+class TransformerEncoder(snt.Module):
+    def __init__(self, dim, depth, n_heads, mlp_dim, dropout=0.1):
         super().__init__()
         self.layers = []
         self.dim = dim
+        self.depth = depth
         self.n_heads = n_heads
         self.mlp_dim = mlp_dim
         self.dropout = dropout
         
         for _ in range(depth):
-            attn, ff = self.get_block()
-            self.layers.append([attn, ff])
+            self.layers.append(EncoderBlock(dim, n_heads, mlp_dim, dropout))
             
-    def get_block(self):
-        l1 = Residual(PreNorm(self.dim, MultiHeadAttention(dim=self.dim, n_heads=self.n_heads, dropout=self.dropout)))
-        l2 = Residual(PreNorm(self.dim, MLP(dim=self.dim, h_dim=self.mlp_dim, dropout=self.dropout)))
-        
-        return l1, l2
-        
     def __call__(self, x):
-        for attn, ff in self.layers:
-            x = attn(x)
-            x = ff(x)
+        for i in range(self.depth):
+            x = self.layers[i](x)
             
         return x
 
@@ -102,6 +112,7 @@ class ViT(snt.Module):
                  n_heads=8, 
                  mlp_dim=2048):
         super().__init__()
+        assert img_size % patch_size == 0, "Image dimensions must be divisible by Patch size"
         self.img_size = img_size
         self.patch_size = patch_size
         self.n_classes = n_classes
