@@ -89,11 +89,11 @@ class TransformerEncoder(snt.Module):
     def __init__(self, dim, depth, n_heads, mlp_dim, dropout=0.1):
         super().__init__()
         self.layers = []
-        self.dim = dim
-        self.depth = depth
-        self.n_heads = n_heads
-        self.mlp_dim = mlp_dim
-        self.dropout = dropout
+        dim = dim
+        depth = depth
+        n_heads = n_heads
+        mlp_dim = mlp_dim
+        dropout = dropout
         
         for _ in range(depth):
             self.layers.append(EncoderBlock(dim, n_heads, mlp_dim, dropout))

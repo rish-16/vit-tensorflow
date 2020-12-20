@@ -1,10 +1,19 @@
 import numpy as np
 import tensorflow as tf
 from vit_tensorflow import MultiHeadAttention
+import matplotlib.pyplot as plt
 
-x = tf.random.uniform([28, 28], 0, 1)
-MHA = MultiHeadAttention(784, 4)
-out = MHA(x)
+(xtrain, ytrain), (xtest, ytest) = tf.keras.datasets.mnist.load_data()
+img = xtrain[0].reshape([784, 1]) / 255
 
-print (x.shape)
-print (out.shape)
+MHA = MultiHeadAttention(28, 4)
+out = MHA(img)
+
+plt.figure()
+plt.subplot(121)
+plt.imshow(img.reshape([28, 28]), cmap="gray")
+
+plt.subplot(122)
+plt.imshow(out, cmap="gray")
+
+plt.show()
