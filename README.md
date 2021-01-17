@@ -1,6 +1,8 @@
 # vit-tensorflow
 TensorFlow wrapper of Vision Transformer from the paper "An Image Is Worth 16x16 Words" by Dosovitskiy et al. that's currently under review for ICLR 2021.
 
+The original `jax` implementation can be found on the Google Research repo [here](https://github.com/google-research/vision_transformer).
+
 ###  Why
 
 Inspired by Phil Wang's `vit-pytorch` [wrapper](https://github.com/lucidrains/vit-pytorch), I hoped to build something similar in TensorFlow. Besides, it's a cool side-project to embark on!
