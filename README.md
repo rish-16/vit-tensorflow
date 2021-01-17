@@ -1,13 +1,13 @@
 # vit-tensorflow
-TensorFlow wrapper of Vision Transformer from the paper "An Image Is Worth 16x16 Words" by Dosovitskiy et al.
+TensorFlow wrapper of Vision Transformer from the paper "An Image Is Worth 16x16 Words" by Dosovitskiy et al. that's currently under review for ICLR 2021.
 
 ###  Why
 
-Inspired by Phil Wang's `vit-pytorch` [wrapper](https://github.com/lucidrains/vit-pytorch), I hoped to build something similar in TensorFlow.
+Inspired by Phil Wang's `vit-pytorch` [wrapper](https://github.com/lucidrains/vit-pytorch), I hoped to build something similar in TensorFlow. Besides, it's a cool side-project to embark on!
 
 ###  Installation
 
-You can install `vit-tensorflow` locally via `pip`:
+You can install `vit-tensorflow` via `pip`:
 
 ```bash
 pip install vit-tensorflow
@@ -34,8 +34,10 @@ img = tf.random.uniform([28, 28], 0, 1)
 logits = vit(img) # outputs a (1000, 1) vector
 ```
 
-###  Citations
+### Notes
+As of now, I'm still trying to figure out how to enable users to train/finetune the model. So far, it only allows for inference.
 
+###  Citations
 ```
 @misc{dosovitskiy2020image,
     title   = {An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale},
